@@ -1,7 +1,44 @@
 
-# About the project
+### About the project
 
 *Write a short description about the course and add a link to your GitHub repository here. This is an R Markdown (.Rmd) file so you should use R Markdown syntax.*
+
+## Course description
+
+The name of this course refers to THREE BIG THEMES: 1) Open Data, 2) Open Science, and 3) Data Science. These themes are summarized briefly as follows:
+
+1) Open Data
+
+There are more and more open data sets available. Utilizing and sharing data is an essential skill for researchers in all fields. During this course we use open data sets from different sources and learn to prepare them for different analyses. You will explore, analyse and interpret data from real world applications.
+
+2) Open Science
+
+Science thrives to be open. Repeating or reproducing the results is a common aim in any branch of science, but it is not always easy or simple. Sharing data is not enough for reproducibility. What is also needed, is using openly available software tools and methods as well as sharing your code and results. You will learn these skills during this course, using state-of-the-art tools.
+
+3) Data Science
+
+Data Science is the name for the data driven world of Statistics. Nowadays, finding or collecting data is not a problem. Instead, the challenges are in extracting knowledge and discovering the patterns behind the data. It requires skills of coding, programming, and modelling, as well as visualizing and analysing. You will face all these topics on this course.
+
+## Contents of the course:
+
+1 Tools and methods for open and reproducible research  
+R, RStudio, R Markdown, GitHub  
+2 Regression and model validation  
+3 Logistic regression  
+4 Clustering and classification  
+Discriminant analysis  
+K-means clustering  
+5 Dimensionality reduction techniques  
+Principal component analysis  
+Multiple correspondence analysis  
+6 Analysis of longitudinal data  
+Graphical displays and summary measures  
+Linear mixed effects models  
+
+After completing this course we will understand the principles and advantages of using open research tools with open data and understand the possibilities of reproducible research. We will know how to use R, RStudio, R Markdown, and GitHub for these tasks and also know how to learn more of these open software tools. We will also know how to apply certain statistical methods of data science, that is, data-driven statistics.
+
+
+The link to my IODS GitHub repository is: https://github.com/tammisi/IODS-project.git
 
 ```{r}
 # This is a so-called "R chunk" where you can write R code.
@@ -9,5 +46,11 @@
 date()
 
 ```
-The text continues here.
 
+### My thoughts about the course
+
+I'm looking forward to the course and to learning to use R and Github better at my daily work. I also expect to get a better understanding of performing basic statistical tests. I have been using bioinformatic tools, mostly R, in my PhD project, but I want to learn to be more efficient and organized in my work. I am also just starting with regression analysis, so this course comes at a very good time. So alltogether I have big expectations for the course!
+
+## Reflection on learning experience with excercise set 1
+
+I am familiar with the basics of R, so there wasn't anything very new for me in exercise set 1. But it is always nice to repeat to refresh and enhance your memory. I haven't been working with dates much in my previous work with R, so there were some useful tips about that topic that can come in handy in the future!
