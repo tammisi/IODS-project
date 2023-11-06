@@ -40,12 +40,6 @@ After completing this course we will understand the principles and advantages of
 
 The link to my IODS GitHub repository is: https://github.com/tammisi/IODS-project.git
 
-```{r}
-# This is a so-called "R chunk" where you can write R code.
-
-date()
-
-```
 
 ### My thoughts about the course
 
