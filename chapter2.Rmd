@@ -1,4 +1,4 @@
-# Insert chapter 2 title here
+# Chapter2, Analysis part
 
 *Describe the work you have done this week and summarize your learning.*
 
@@ -10,4 +10,84 @@
 date()
 ```
 
-Here we go again...
+
+```{r, message=FALSE}
+# libraries needed in this exercise
+library(tidyverse)
+library(readr)
+library(ggplot2)
+library(GGally)
+```
+
+
+## Exercise 1
+### Read the students2014 data into R. Explore the structure and the dimensions of the data and describe the dataset briefly, assuming the reader has no previous knowledge of it.
+```{r}
+# read in the 
+learning2014 <- read_csv("learning2014.csv")
+dim(learning2014)
+str(learning2014)
+```
+
+Answer:  
+The dataset has 166 rows and 7 columns. The data consists of results from a survey on student's attitudes towards statistics and their exam points. In the data we have variables like `gender` and `age`, as well as `attitude`, which is student's global attitude toward statistics, and also student's answers to questions that have bee grouped by their relatedness to deep (`deep`), surface (`surf`) and strategic (`stra`) learning and that have been scaled back to the original 1-5 scale by taking the mean.
+
+## Exercise 2
+### Show a graphical overview of the data and show summaries of the variables in the data. Describe and interpret the outputs, commenting on the distributions of the variables and the relationships between them.
+
+```{r}
+# get summary of variables
+summary(learning2014)
+
+# draw a scatter plot matrix of the variables in learning2014.
+# [-1] excludes the first column (gender)
+pairs(learning2014[-1])
+
+# create a more advanced plot matrix with ggpairs()
+ggpairs(learning2014, mapping = aes(), lower = list(combo = wrap("facethist", bins = 20)))
+
+```
+
+Answer:  
+In the summary we can see that age of the participants ranges between 17 and 55, mean being 26. Attitudes on 1-5 scale range from 1.4 to 5.0, mean is 3.1. Exam points range from 7.0 to 33.0 and the mean is 22.7.
+
+From the plot matrix we can see that attitude correlates strongly with points (cor=0.437) and also answers related to surface and deep learning correlate with each other.
+
+## Exercise 3
+### Choose three variables as explanatory variables and fit a regression model where exam points is the target (dependent, outcome) variable. Show a summary of the fitted model and comment and interpret the results. Explain and interpret the statistical test related to the model parameters. If an explanatory variable in your model does not have a statistically significant relationship with the target variable, remove the variable from the model and fit the model again without it
+
+```{r}
+# I choose gender, attitude, and deep as the explanatory variables
+
+# fit a regression model
+learning.lm <- lm(points ~ gender + attitude + deep, data= learning2014)
+summary(learning.lm)
+```
+
+Answer:  
+In the model with gender, attitude and deep as eplanatory variables, only attitude is a statistically significant predictor of exam points (p-value < 0.05). The p-value is 6.61e-09, so there is strong evidence that the coefficient cannot be 0 and the null hypotheses (the explanatory variable has no effect on the outcome variable) can be rejected. With every 1 unit change in attitude, the points increase by 3.6657. This model explains only 18% of the variation in exam points, so it isn't a very good predictor.
+The coefficient (`estimate`) describes the change in the outcome variable (exam points) by every 1 unit change in the explanatory variable, Std.error shows the standard error of the coefficient, the t-statistic measures the number of standard errors the estimated coefficient is away from the hypothesized value (0), and the p-value expresses the statistical significance of the coefficient. 
+
+```{r}
+# remove variables 'gender' and 'deep' because they don't have a statistically significant relationship with the target variable and refit the model
+
+learning.lm <- lm(points ~ attitude, data=learning2014)
+summary(learning.lm)
+```
+
+## Exercise 4
+### Using a summary of your fitted model, explain the relationship between the chosen explanatory variables and the target variable (interpret the model parameters). Explain and interpret the multiple R-squared of the model
+
+Answer:  
+After removing the non-significant variables, attitude is still statistically significant (p-value now 4.12e-09). The predicted change in exam points per one unit change in attitude is 3.5255. Standard error is 0.57 so pretty low. T-value also indicates that the estimated coefficient is 6.2 standard errors away from 0. The model now explains 18.6% (adjusted R-squared = 0.1856) of the variation in exam points. So the results didn't change much when removing the non-significant variables.
+
+## Exercise 5
+### Produce the following diagnostic plots: Residuals vs Fitted values, Normal QQ-plot and Residuals vs Leverage. Explain the assumptions of the model and interpret the validity of those assumptions based on the diagnostic plots
+
+```{r}
+par(mfrow=c(2,2))
+plot(learning.lm, which=c(1,2,5))
+```
+
+Answer:  
+Residuals vs. fitted plot show that the points are quite nicely evenly distributed and don't show any clear pattern, show the model seem to fit the data well. No modifications such as quadratic terms, are needed. Also the QQ plot showing the residuals against the same from a normal distribution look like a pretty even diagonal line, except some small deviations in the lower and higher ends, so the data seems to be normally distributed. The residuals vs leverage plot doesn't show any strong outliers that would have a significant effect on the results. So according to the diagnostic plots, the model seems to perform well on the data.
