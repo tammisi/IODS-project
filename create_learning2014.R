@@ -14,8 +14,11 @@ str(lrn14)
 # Create an analysis dataset with the variables gender, age, attitude, deep, stra, surf and points 
 # by combining questions in the learning2014 data and scale all combination variables to the original 
 # scales (by taking the mean)
-# attitude
+
+# scale attitude
 lrn14$attitude <- lrn14$Attitude / 10
+
+# combine columns and get row mean for deep, surf and stra
 # deep
 deep_questions <- c("D03", "D11", "D19", "D27", "D07", "D14", "D22", "D30","D06",  "D15", "D23", "D31")
 deep_columns <- select(lrn14, one_of(deep_questions))
@@ -28,7 +31,8 @@ lrn14$surf <- rowMeans(surface_columns)
 strategic_questions <- c("ST01","ST09","ST17","ST25","ST04","ST12","ST20","ST28")
 strategic_columns <- select(lrn14, one_of(strategic_questions))
 lrn14$stra <- rowMeans(strategic_columns)
-# points
+
+# change name for Points -> points and Age -> age
 lrn14 <- lrn14 %>% mutate(points = Points, age = Age)
 
 # extract columns to create analysis data set
@@ -44,7 +48,7 @@ library(readr)
 write_csv(learning2014, ./data/"learning2014.csv") 
 
 # Demonstrate that you can also read the data again by using read_csv() 
-test <- read_csv("learning2014.csv")
+test <- read_csv("./data/learning2014.csv")
 
 # Use `str()` and `head()` to make sure that the structure of the data is correct
 str(test)
