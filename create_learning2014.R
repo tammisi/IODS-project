@@ -41,7 +41,7 @@ dim(learning2014) # dim now 166 X 7, so should be ok
 
 # Save the analysis dataset to the ‘data’ folder
 library(readr)
-write_csv(learning2014, "learning2014.csv") 
+write_csv(learning2014, ./data/"learning2014.csv") 
 
 # Demonstrate that you can also read the data again by using read_csv() 
 test <- read_csv("learning2014.csv")

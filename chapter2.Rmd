@@ -24,7 +24,7 @@ library(GGally)
 ### Read the students2014 data into R. Explore the structure and the dimensions of the data and describe the dataset briefly, assuming the reader has no previous knowledge of it.
 ```{r}
 # read in the 
-learning2014 <- read_csv("learning2014.csv")
+learning2014 <- read_csv("./data/learning2014.csv")
 dim(learning2014)
 str(learning2014)
 ```
