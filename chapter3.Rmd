@@ -1,0 +1,205 @@
+---
+title: "Chapter 3 data analysis excercises"
+author: "Silja Tammi"
+date: "11/19/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load libraries
+
+```{r, include=FALSE}
+library(tidyverse)
+library(GGally)
+library(ggpubr)
+library(boot)
+```
+
+## Chapter 3, Data analysis
+
+### Exercise 1
+
+#### *Read the joined student alcohol consumption data into R*
+```{r}
+alc <- read.csv("./data/alc.csv")
+dim(alc)
+head(alc)
+```
+
+### Exercise 2
+
+#### *Print out the names of the variables in the data and describe the data set briefly, assuming the reader has no previous knowledge of it.*
+
+```{r}
+names(alc)
+```
+
+The data is combined from two identical questionnaires related to secondary school student alcohol consumption in Portugal. There are 370 students and 36 variables. There are variables defining student characteristics such as `school`, `sex`, `age` and so on. Numeric variables `failures`, `absences`, `G1`, `G2` and `G3` are rounded averages. `alc_use` is the average of the answers related to weekday and weekend alcohol consumption and `high_use` is a logical variable (TRUE for 'alc_use' > 2 and FALSE for 'alc_use' <2).
+
+### Exercise 3 
+
+#### *The purpose of your analysis is to study the relationships between high/low alcohol consumption and some of the other variables in the data. To do this, choose 4 interesting variables in the data and for each of them, present your personal hypothesis about their relationships with alcohol consumption.*
+
+I choose variables `sex`, `school`, `failures` and `famrel`.  
+H0 hypothesis is that the variables have no connection to alcohol consumption among students.  
+My H1 hypotheses are:  
+- sex is connected to high alcohol use (for sex=M use is higher).  
+- there might be differences between the schools  
+- higher number of past class failures and poorer quality of family relationships is connected to higher alcohol consumption.
+
+### Exercise 4
+
+#### *Numerically and graphically explore the distributions of your chosen variables and their relationships with alcohol consumption (use for example cross-tabulations, bar plots and box plots). Comment on your findings and compare the results of your exploration to your previously stated hypotheses.*
+
+```{r}
+
+# bar plots of all variables
+mydata <- select(alc, c(high_use, school, sex, famrel, failures))
+gather(mydata) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") + geom_bar()
+
+# barplots of non-numerical variables
+g1 <- ggplot(alc, aes(x=high_use)) + geom_bar() + facet_wrap('sex') + ggtitle('high_use vs sex') + theme(plot.title = element_text(hjust = 0.5))
+
+g2 <- ggplot(alc, aes(x=high_use)) + geom_bar() + facet_wrap('school') + ggtitle('high_use vs school') + theme(plot.title = element_text(hjust = 0.5))
+
+# boxplots of numerical variables
+g3 <- ggplot(alc, aes(x=high_use, y=famrel)) + geom_boxplot() + ggtitle('high_use vs famrel') + theme(plot.title = element_text(hjust = 0.5))
+
+ggarrange(g1,g2,g3)
+
+#g4 <- ggplot(alc, aes(x=high_use, y=failures)) + geom_boxplot() + ggtitle('high_use vs failures') + theme(plot.title = element_text(hjust = 0.5)) 
+#g4
+# for some reason this doesn't work for failures, so I use boxplot in this case instead:
+boxplot(alc$high_use, alc$failures, xlab='high use', ylab='failures', main='high_use vs. failures', names=levels(factor(alc$high_use)))
+
+```
+
+From the first barplot we can see that most students have zero and only very few have 1-3 past failures. Most of the students also have good family relations. High alcohol use is more uncommon than low alcohol use. There are a lot more students from school 'GP' than 'MS', but the ratio between female and male students is pretty even. 
+
+The barplot of **high_use vs. sex** indicates that larger proportion of male students are high users of alcohol, so this indicates that the hypotheses could be true.  
+
+The barplot of **high_use vs. school** indicates that in both schools the proportion of high users is lower than not high users. Even though the difference is bigger in `GP`, the difference might not be statistically significant.   
+
+The barplot of **high_use vs. famrel** indicates that the mean quality of family relations is lower among high users. The hypothesis could therefore be true.
+
+The barplot of **high_use vs. failures** indicates that both high and low users have very few past failures. Althoug there are some individuals with higer amounts of failures among high users, I don't think this difference is going to be statistically significant, so the hypothesis migh not hold.
+
+### Exercise 5
+
+#### *Use logistic regression to statistically explore the relationship between your chosen variables and the binary high/low alcohol consumption variable as the target variable*
+
+```{r}
+# fit model
+alc.glm <- glm(high_use ~ sex + school + failures + famrel, data = alc, family = "binomial")
+summary(alc.glm)
+
+confint(alc.glm)
+
+coef(alc.glm) %>% exp
+```
+#### *Present and interpret a summary of the fitted model. Present and interpret the coefficients of the model as odds ratios and provide confidence intervals for them. Interpret the results and compare them to your previously stated hypothesis.*
+
+Seems like `School` is not a signifant variable explaining alcohol consumption (p-value 0.409704). However,`sex` is a highly significant variable (p-value 0.000107). The odds of student being a high user is 2.6 times **higher** (exp(0.94) = 2.55) if he is a male compared with a female, if all other variables are constant.`Failures` is also significant (p-value 0.002260), one unit increase in number of failures **increases** log odds of high use by 0.62 (95% CI 0.23, 1.03) units. `Famrel` is also somewhat significant (p-value 0.015718), every one unit increase in the quality of family relations **decreases** log odds of high use by -0.31 (95% CI -0.56, -0.06) units. so the hypotheses for `sex`, `failures` and `famrel` were correct.
+
+### Exercise 6
+
+#### *Using the variables which, according to your logistic regression model, had a statistical relationship with high/low alcohol consumption, explore the predictive power of you model. Provide a 2x2 cross tabulation of predictions versus the actual values and optionally display a graphic visualizing both the actual values and the predictions. Compute the total proportion of inaccurately classified individuals (= the training error) and comment on all the results. Compare the performance of the model with performance achieved by some simple guessing strategy*
+
+```{r}
+
+# retrain model with statistically significant variables
+alc.glm <- glm(high_use ~ sex + failures + famrel, data=alc, family='binomial')
+summary(alc.glm)
+
+# make predictions
+probabilities <- predict(alc.glm, type = "response")
+
+# add the predicted probabilities to 'alc'
+alc <- mutate(alc, probability = probabilities)
+
+# create logical vector indicating predictions
+alc <- mutate(alc, prediction = probabilities > 0.5)
+
+# table the target variable versus the predictions
+table(high_use = alc$high_use, prediction = alc$prediction) %>% prop.table() %>% addmargins()
+
+# plot 'high_use' versus 'probability'
+ggplot(alc, aes(x = high_use, y = probability)) + geom_point()
+
+# define a loss function (mean prediction error)
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+
+# call loss_func to compute the average number of wrong predictions in the (training) data
+loss_func(class = alc$high_use, prob = alc$probability)
+```
+
+The training error of the model is 0.286 = 28.6% of classifications are wrong. I guess this is not ideal, but better than gessing (50% chance of classification being right or wrong).
+
+### Exercise 7. **BONUS**
+
+#### *Bonus: Perform 10-fold cross-validation on your model. Does your model have better test set performance (smaller prediction error using 10-fold cross-validation) compared to the model introduced in the Exercise Set (which had about 0.26 error). Could you find such a model? *
+
+```{r}
+# K-fold cross-validation
+cv <- cv.glm(data = alc, cost = loss_func, glmfit = alc.glm, K = nrow(alc))
+
+# average number of wrong predictions in the cross validation
+cv$delta[1]
+```
+
+The test set error (0.289) is not better than the training error (0.286).
+
+### Exercise 8 *BONUS*
+
+#### *Super-Bonus: Perform cross-validation to compare the performance of different logistic regression models (= different sets of predictors). Start with a very high number of predictors and explore the changes in the training and testing errors as you move to models with less predictors. Draw a graph displaying the trends of both training and testing errors by the number of predictors in the model*
+
+```{r, warning=FALSE}
+
+# function to calculate train and test error
+alc_function <- function(model, Data) {
+  probabilities <- predict(model, type = "response")
+  Data <- mutate(Data, probability = probabilities)
+  Data <- mutate(Data, prediction = probabilities > 0.5)
+  print(table(high_use = Data$high_use, prediction = Data$prediction) %>% prop.table() %>% addmargins())
+  print(paste0("train error: ", loss_func(class = Data$high_use, prob = Data$probability)))
+  cv <- cv.glm(data = Data, cost = loss_func, glmfit = model, K = nrow(Data))
+  print(paste0("cv$delta: ", cv$delta[1]))
+}
+
+
+# start with a model with high number of variables as predictors
+alc.1 <- select(alc, c(2:4, 6:25, 28:31,36))
+alc.glm1 <- glm(high_use ~., data = alc.1, family = 'binomial') 
+summary(alc.glm1)
+
+# apply function to get train and test error
+alc_function(alc.glm1, alc.1)
+
+# decrease the amount of variables (remove some of the insignificant variables)
+alc.2 <- select(alc, c('sex', 'age', 'Medu', 'Fedu', 'Mjob', 'reason', 'guardian', 'traveltime', 'higher','famrel', 'goout', 'health', 'absences', 'high_use'))
+
+# train model
+alc.glm2 <- glm(high_use ~., data = alc.2, family = 'binomial') 
+summary(alc.glm2)
+
+# repeat calculations
+alc_function(alc.glm2, alc.2)
+
+# remove all unsignificant variables
+alc.3 <- select(alc, c('sex', 'reason', 'famrel', 'goout', 'absences', 'high_use'))
+
+# train model
+alc.glm3 <- glm(high_use ~., data = alc.3, family = 'binomial') 
+summary(alc.glm3)
+
+# repeat calculations
+alc_function(alc.glm3, alc.3)
+```
+
+Test error reduces when only significant predictors are in the model. Train error is constantly around 0.19-0.20.
