@@ -1,0 +1,200 @@
+
+---
+title: "Chapter 4 data analysis exercises"
+author: "Silja Tammi"
+date: "11/24/2023"
+output: html_document
+---
+
+# Chapter 4
+
+```{r, include=FALSE}
+# Load libraries
+library(tidyverse)
+library(MASS)
+library(corrplot)
+```
+## Exercise 1 - Load Boston data
+```{r}
+data("Boston")
+```
+
+## Ecercise 2 - Explore the structure and the dimensions of the `Boston` data set
+
+```{r}
+str(Boston)
+dim(Boston)
+```
+
+The Boston data set consists of housing Values in the suburbs of Boston. There are in total 506 observations and 14 variables related to housing properties, such as if the house bounds Charles river (`chas`), average number of rooms (`rm`) and median value of owner-occupied homes (`medv`). Variables are either numerical or integer variables.
+
+## Ecercise 3 - Graphical overview and summaries of the variables in the data 
+
+
+```{r}
+# summarize variables
+summary(Boston)
+
+# calculate the correlation matrix and round it to see relationships between the variables
+cor_matrix <- cor(Boston) %>% round(digits=2)
+
+# visualize the correlation matrix
+corrplot(cor_matrix, method="circle", type="upper", cl.pos = "b", tl.pos = "d", tl.cex = 0.6)
+
+```
+
+From the summary we can see for example that:  
+- The per capita crime rate by town ranges from 0.006 to 88.976, mean is 3.677.    
+- Most houses don't bound Charles river (mean of the dummy variable is 0.069).  
+- Average number of rooms is 6.3 (ranges from 3.6 to 8.8).  
+- Age ranges from 2.9 to 100, mean is 68.6.  
+- There are on average 18.46 pupils per teacher (range 12.6 to 22).  
+- Median value of homes is 22.53 * 1000 = 22530 $ (range 5000 - 50000).  
+
+From the correlation plot we can see for example that:  
+- `Age` and `dis` (weighted mean of distances to five Boston employment centres) have strong negative correlation, so younger people live closer to center  
+- `nox` (nitrogen oxides concentration) and `dis` have strong negative correlation, so more NO close to the center  
+- `nox` and `age` have strong positive correlation, which makes sense if older people live further away from the centers that have bigger NO concentrations  
+- `rad` (accessibility to radial highways) and `tax` (full-value property-tax rate) have strong positive correlation, so houses with access to highway have higher full-value property-tax rate  
+- `rm` and `medv` have strong positive correlation, so houses with more rooms are more expensive  
+- `crim` and `rad` and `tax` have positive correlation, so more crimes in areas with access to highways and higher property-tax rate  
+
+## Exercise 4 - Standardization of the data
+
+*Standardize the dataset and print out summaries of the scaled data. How did the variables change? *
+
+```{r}
+# center and standardize variables
+boston_scaled <- Boston %>% scale()
+
+# summary of the scaled variables
+summary(boston_scaled)
+
+# change the object to data frame
+boston_scaled <- boston_scaled %>% as.data.frame()
+```
+
+The ranges of the variables are clearly much more even now, and for example tax that ranged from 187 to 711 or black (1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town) that ranged from 0.32 to 396.9 won't dominate in the LDA analysis.
+
+*Create a categorical variable of the crime rate in the Boston dataset (from the scaled crime rate). Use the quantiles as the break points in the categorical variable. Drop the old crime rate variable from the dataset.*
+
+```{r}
+# convert scaled crim into numerical
+#boston_scaled$crim <- as.numeric(boston_scaled$crim)
+# create a quantile vector of crim 
+bins <- quantile(boston_scaled$crim)
+
+# create a categorical variable 'crime'
+values =c("low", "med_low", "med_high", "high")
+crime <- cut(boston_scaled$crim, breaks = bins, include.lowest = TRUE, label= values)
+
+# look at the table of the new factor crime
+crime %>% table()
+
+# remove original crim from the dataset
+boston_scaled <- dplyr::select(boston_scaled, -crim)
+
+# add the new categorical value to scaled data
+boston_scaled <- data.frame(boston_scaled, crime)
+```
+
+*Divide the dataset to train and test sets, so that 80% of the data belongs to the train set.*
+
+```{r}
+# number of rows in the Boston dataset 
+n <- nrow(boston_scaled)
+
+# choose randomly 80% of the rows
+ind <- sample(n,  size = n * 0.8)
+
+# create train set
+train <- boston_scaled[ind,]
+
+# create test set 
+test <- boston_scaled[-ind,]
+
+```
+
+## Exercise 5 - Fitting LDA
+
+*Fit the linear discriminant analysis on the train set. Use the categorical crime rate as the target variable and all the other variables in the dataset as predictor variables. Draw the LDA (bi)plot.*
+
+```{r}
+# fit linear discriminant analysis with crime as the target and other variables as predictors
+lda.fit <- lda(crime ~., data = train)
+
+# print the lda.fit object
+lda.fit
+
+# the function for lda biplot arrows
+lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
+  heads <- coef(x)
+  graphics::arrows(x0 = 0, y0 = 0, 
+         x1 = myscale * heads[,choices[1]], 
+         y1 = myscale * heads[,choices[2]], col=color, length = arrow_heads)
+  text(myscale * heads[,choices], labels = row.names(heads), 
+       cex = tex, col=color, pos=3)
+}
+
+# target classes as numeric
+classes <- as.numeric(train$crime)
+
+# plot the lda results 
+plot(lda.fit, dimen = 2)
+lda.arrows(lda.fit, myscale = 1)
+```
+
+## Exercise 6 - Prediction
+
+*Save the crime categories from the test set and then remove the categorical crime variable from the test dataset. Then predict the classes with the LDA model on the test data. Cross tabulate the results with the crime categories from the test set. Comment on the results.*
+
+```{r}
+
+# save the correct classes from test data
+correct_classes <- test$crime
+
+# remove the crime variable from test data
+test <- dplyr::select(test, -crime)
+
+# predict classes with test data
+lda.pred <- predict(lda.fit, newdata = test)
+
+# cross tabulate the results
+table(correct = correct_classes, predicted = lda.pred$class)
+```
+
+In this case, LDA is pretty good at predicting the high crime rates:  
+- all 23/23 "high" correctly assigned as high  
+Prediction accuracy of other classes is not as good:  
+- 16/23 of "low" are correctly assigned as low, 6/23 as med_low, 1/23 as med_high and zero as high  
+- 19/29 of "med_low" are correctly assigned as med_low, 6/29 as med_high and 4/29 as low  
+- 19/27 of "med_high" are correctly assigned as med_high, 6/29 as med_low and 2 as high
+
+## Exercise 7 - K-means clustering
+
+*Reload the Boston dataset and standardize the dataset. Calculate the distances between the observations.*
+
+```{r}
+data("Boston")
+
+# scale and convert into data.frame
+boston_scaled <- as.data.frame(scale(Boston))
+
+# euclidean distance matrix
+dist_eu <- dist(boston_scaled)
+
+# look at the summary of the distances
+summary(dist_eu)
+```
+
+*Run k-means algorithm on the dataset. Investigate what is the optimal number of clusters and run the algorithm again. Visualize the clusters (for example with the pairs() or ggpairs() functions, where the clusters are separated with colors) and interpret the results*
+
+```{r}
+# k-means clustering with clusters 1 to 5 and plotting
+for (i in 1:5) {
+  km <- kmeans(Boston, centers = i)
+  pairs(Boston[, c("rm", "age", "dis", "crim")], col = km$cluster)
+}
+```
+
+K = 4 an K = 5 seem to be too many, because the clusters overlap. 2 or 3 is maybe more suitable.
