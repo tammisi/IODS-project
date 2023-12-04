@@ -303,7 +303,7 @@ alc <- mutate(alc, high_use = alc_use > 2)
 g2 <- ggplot(data = alc, aes(x=high_use))
 
 # draw a bar plot of high_use by sex
-g2 + geom_bar()
+g2 + geom_bar() + facet_wrap("sex")
 
 ```
 
@@ -661,7 +661,10 @@ g <- ggplot(alc, aes(x = high_use, y = probability))
 g + geom_point()
 
 # tabulate the target variable versus the predictions
-table(high_use = alc$high_use, prediction = alc$prediction)
+table_use <- table(high_use = alc$high_use, prediction = alc$prediction)
+
+table_use
+table_use %>% prop.table() %>% addmargins()
 
 
 ```
@@ -711,7 +714,7 @@ loss_func <- function(class, prob) {
 }
 
 # call loss_func to compute the average number of wrong predictions in the (training) data
-loss_func(class = alc$high_use, prob = 1)
+loss_func(class = alc$high_use, prob = alc$probability)
 
 
 ```
@@ -757,7 +760,7 @@ loss_func <- function(class, prob) {
 }
 
 # compute the average number of wrong predictions in the (training) data
-loss_func(class = alc$high_use, prob = 0)
+loss_func(class = alc$high_use, prob = alc$probability)
 
 # K-fold cross-validation
 library(boot)

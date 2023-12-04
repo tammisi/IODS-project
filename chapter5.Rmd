@@ -1,0 +1,133 @@
+---
+title: "Chapter 5 Data analysis excercises"
+author: "Silja Tammi"
+date: "12/1/2023"
+output: html_document
+---
+
+# Chapter 5
+
+```{r, include=FALSE}
+# Load libraries
+library(tidyverse)
+library(dplyr)
+library(readr)
+library(corrplot)
+library(GGally)
+library(FactoMineR)
+```
+
+## Exercise 1 - Graphical overview
+
+*Move the country names to rownames. Show a graphical overview of the data and show summaries of the variables in the data. Describe and interpret the outputs, commenting on the distributions of the variables and the relationships between them.*
+
+```{r}
+human <- read.csv('./data/human.csv', header = T)
+dim(human)
+human <- column_to_rownames(human, "Country")
+head(human)
+dim(human)
+
+ggpairs(human, progress = FALSE)
+
+cor_matrix <- cor(human) %>% round(digits=2)
+corrplot(cor_matrix, method="circle", type="upper", cl.pos = "b", tl.pos = "d", tl.cex = 0.6)
+```
+
+From the ggpairs plot we can see that many variables are not normally distributed, such as `GNI` and `Mat_mort`. Many of the variables are strongly correlated.
+From the correlation plot we can confirm that many variables have strong positive and negative correlations, but that the variables `LFPR_ratio` and `Rep_parl` don't seem to correlate as much with the other variables.
+
+## Excercise 2 - PCA on non-standardized data
+
+*Perform principal component analysis (PCA) on the raw (non-standardized) human data. Show the variability captured by the principal components. Draw a biplot displaying the observations by the first two principal components (PC1 coordinate in x-axis, PC2 coordinate in y-axis), along with arrows representing the original variables*
+
+```{r, warning=F}
+# perform PCA on non-standardized data
+pca_human <- prcomp(human)
+summary(pca_human) # proportion of variance and cumulative proportion captured by the components 
+
+# draw biplot
+biplot(pca_human, choices = 1:2)
+```
+
+Since GNI has a lot wider range of values than the other variables and the data hasn't been standardized, GNI dominates the analysis. Pretty much all the variability in the data is explained by GNI alone and the first principal component explains the majority of the variation.
+
+## Excercise 3 - PCA on standardized data
+
+*Standardize the variables in the human data and repeat the above analysis. Interpret the results of both analysis (with and without standardizing). Are the results different? Why or why not? Include captions (brief descriptions) in your plots where you describe the results by using not just your variable names, but the actual phenomena they relate to.*
+
+```{r}
+# standardize data
+human_std <- scale(human)
+
+# perform PCA on standardized data
+pca_human_std <- prcomp(human_std)
+summary(pca_human_std)
+
+# create and print out a summary of pca_human
+s <- summary(pca_human_std)
+
+# rounded percentanges of variance captured by each PC
+pca_pr <- round(1*s$importance[2, ], digits = 5)
+
+# create object pc_lab to be used as axis labels
+pc_lab <- paste0(names(pca_pr), " (", pca_pr * 100, "%)")
+
+# draw a biplot Use the first value of the `pc_lab` vector as the label for the x-axis and the second value as the label for the y-axis
+
+biplot(pca_human_std, cex = c(0.8, 1), col = c("grey40", "deeppink2"), xlab = pc_lab[1], ylab = pc_lab[2])
+```
+
+The biplot looks different, since after scaling the data, the variables contribute equally to the analysis. The biplot is much more even now. The first principal component now explains 54% of the variation.
+
+## Excercise 4 - Interpretations of the first two principal component dimensions 
+
+*Give your personal interpretations of the first two principal component dimensions based on the biplot drawn after PCA on the standardized human data.*
+
+Biplot shows how strongly each characteristic influences a principal component. We can see that PC1 is is influenced by factors such as `years of education` and `life expectancy`, which are positively correlated with each other, as well as `Mat_mort`, which is negatively correlated with the other 2. PC2 is influenced by `LFPR_ratio` and `Rep_parl`, which are also positively correlated with each other.
+
+## Excercise 5 - Visualization of Tea data
+
+*Load the tea dataset and convert its character variables to factors. Explore the data briefly: look at the structure and the dimensions of the data. Use View(tea) to browse its contents, and visualize the data.*
+```{r}
+tea <- read.csv("https://raw.githubusercontent.com/KimmoVehkalahti/Helsinki-Open-Data-Science/master/datasets/tea.csv", stringsAsFactors = TRUE)
+str(tea)
+
+# There are no character variables, so I'm not sure what should be converted here..
+summary(tea)
+
+# make a smaller data set of 'tea'
+keep_columns <- c("breakfast", "evening", "work", "Tea", "sugar", "sex", "Sport", "relaxing", "effect.on.health")
+
+# select the 'keep_columns' to create a new dataset
+tea_time <- dplyr::select(tea, keep_columns)
+
+# ggplot
+pivot_longer(tea_time, cols = everything()) %>% 
+  ggplot(aes(value)) + facet_wrap("name", scales = "free") + geom_bar()
+
+```
+
+## Exercise 5 - Multiple Correspondence Analysis (MCA) 
+
+*Use Multiple Correspondence Analysis (MCA) on the tea data (or on just certain columns of the data, it is up to you!). Interpret the results of the MCA and draw at least the variable biplot of the analysis. You can also explore other plotting options for MCA. Comment on the output of the plots.*
+
+```{r}
+# multiple correspondence analysis
+mca <- MCA(tea_time, graph = FALSE)
+
+# summary of the model
+summary(mca)
+
+# visualize the model
+plot(mca, invisible=c("ind"), graph.type = "classic", habillage = "quali")
+plot(mca, invisible=c("var"), graph.type = "classic", habillage = "quali")
+```
+
+The distance between variables gives a measure of their similarity (or dissimilarity). For example `Relaxing` and `evening` seem to contribute most to Dim 1, whereas variables `work` and `Tea` contribute greatly to Dim2. 
+
+From the individuals' scatterplot we can see that there is no particular group of individuals, the scatterplot is quite homogeneous.
+
+
+
+
