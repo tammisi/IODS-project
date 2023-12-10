@@ -62,9 +62,27 @@ RATSL <- RATSL %>%
 # of the variables. Make sure that you understand the point of the long form data and the crucial 
 # difference between the wide and the long forms before proceeding the to Analysis exercise.
 
-names(BPRSL)
-dim(BPRSL)
+names(BPRS) 
+# "treatment" "subject"   "week0"     "week1"     "week2"     "week3"     "week4"     "week5"    "week6"     "week7"     "week8" 
+names(BPRSL) 
+# "treatment" "subject"   "weeks"     "bprs"      "week" 
+
+dim(BPRS) # 40 X 11
+dim(BPRSL) # 360 X 5
+
+str(BPRS)
 str(BPRSL)
+
+names(RATS) 
+# "ID"    "Group" "WD1"   "WD8"   "WD15"  "WD22"  "WD29"  "WD36"  "WD43"  "WD44"  "WD50"  "WD57"
+names(RATSL)
+# "ID"     "Group"  "WD"     "Weight" "Time"
+
+dim(RATS) # 16 X 13
+dim(RATSL) # 176 X 5
+
+str(RATS)
+str(RATSL)
 
 # In the wide format every measure that varies in time occupies a set of columns, whereas in the long 
 # format there will be multiple records for each individual. Some variables that do not vary in time 
