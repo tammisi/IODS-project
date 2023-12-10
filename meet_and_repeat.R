@@ -55,8 +55,7 @@ BPRSL <-  BPRSL %>%
   mutate(week = as.integer(substr(weeks, 5,5)))
 
 RATSL <- RATSL %>% 
-  mutate(Time = as.integer(substr(WD, 3,4))) %>%
-  arrange(Time)
+  mutate(Time = as.integer(substr(WD, 3,4))) 
 
 # 4. Now, take a serious look at the new data sets and compare them with their wide form versions: 
 # Check the variable names, view the data contents and structures, and create some brief summaries 
