@@ -73,6 +73,9 @@ dim(BPRSL) # 360 X 5
 str(BPRS)
 str(BPRSL)
 
+summary(BPRS$week0)
+summary(BPRSL$bprs)
+
 names(RATS) 
 # "ID"    "Group" "WD1"   "WD8"   "WD15"  "WD22"  "WD29"  "WD36"  "WD43"  "WD44"  "WD50"  "WD57"
 names(RATSL)
@@ -83,6 +86,9 @@ dim(RATSL) # 176 X 5
 
 str(RATS)
 str(RATSL)
+
+summary(RATS$WD1)
+summary(RATSL$Weight)
 
 # In the wide format every measure that varies in time occupies a set of columns, whereas in the long 
 # format there will be multiple records for each individual. Some variables that do not vary in time 
